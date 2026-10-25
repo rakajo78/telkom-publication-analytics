@@ -1,0 +1,4 @@
+# Ganti placeholder berikut dengan username GitHub aktual sebelum mengaktifkan aturan review.
+* @USERNAME
+/contracts/ @USERNAME @AHMAD_USERNAME
+/sql/ddl/ @USERNAME @AHMAD_USERNAME

@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pubdash_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPERSET_DB_NAME: ${SUPERSET_DB_NAME}
+      SUPERSET_DB_USER: ${SUPERSET_DB_USER}
+      SUPERSET_DB_PASSWORD: ${SUPERSET_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  superset:
+    image: apache/superset:6.0.0
+    container_name: pubdash_superset
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${SUPERSET_DB_USER}:${SUPERSET_DB_PASSWORD}@postgres:${SUPERSET_DB_PORT}/${SUPERSET_DB_NAME}
+      SUPERSET_ADMIN_USERNAME: admin
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+      SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
+    ports:
+      - "8088:8088"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        superset db upgrade &&
+        (superset fab create-admin \
+          --username "$$SUPERSET_ADMIN_USERNAME" \
+          --firstname Admin \
+          --lastname User \
+          --email "$$SUPERSET_ADMIN_EMAIL" \
+          --password "$$SUPERSET_ADMIN_PASSWORD" || true) &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+
+volumes:
+  pg_data:

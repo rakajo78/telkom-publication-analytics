@@ -1,0 +1,29 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data/exports
+data/*
+!data/sample/
+!data/sample/.gitkeep
+import/
+export/
+*.csv
+*.parquet
+*.xlsx
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
